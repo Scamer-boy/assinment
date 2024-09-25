@@ -1,55 +1,69 @@
 // src/components/StudentForm.js
-import React, { useEffect } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import React, { useState, useEffect } from 'react';
 
 const StudentForm = ({ onSubmit, initialValues }) => {
-  const validationSchema = Yup.object({
-    name: Yup.string().required('Name is required'),
-    age: Yup.number().required('Age is required').positive().integer(),
-    grade: Yup.string().required('Grade is required'),
-  });
+  const [name, setName] = useState(initialValues.name || '');
+  const [age, setAge] = useState(initialValues.age || '');
+  const [email, setEmail] = useState(initialValues.email || '');
+  const [errors, setErrors] = useState({});
 
-  const formik = useFormik({
-    initialValues: initialValues || { name: '', age: '', grade: '' },
-    validationSchema: validationSchema,
-    onSubmit: (values, { resetForm }) => {
-      onSubmit(values);
-      resetForm();
-    },
-  });
+  const validate = () => {
+    const errors = {};
+    if (!name) errors.name = 'Required';
+    if (!age || age <= 0) errors.age = 'Must be greater than 0';
+    if (!email) errors.email = 'Required';
+    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Invalid email format';
+    return errors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length === 0) {
+      onSubmit({ name, age, email });
+      setName('');
+      setAge('');
+      setEmail('');
+      setErrors({});
+    } else {
+      setErrors(validationErrors);
+    }
+  };
+
+  useEffect(() => {
+    setName(initialValues.name || '');
+    setAge(initialValues.age || '');
+    setEmail(initialValues.email || '');
+  }, [initialValues]);
 
   return (
-    <form onSubmit={formik.handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <div>
-        <label>Name:</label>
+        <label>Name</label>
         <input
           type="text"
-          name="name"
-          onChange={formik.handleChange}
-          value={formik.values.name}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
-        {formik.errors.name && <div>{formik.errors.name}</div>}
+        {errors.name && <div style={{ color: 'red' }}>{errors.name}</div>}
       </div>
       <div>
-        <label>Age:</label>
+        <label>Age</label>
         <input
           type="number"
-          name="age"
-          onChange={formik.handleChange}
-          value={formik.values.age}
+          value={age}
+          onChange={(e) => setAge(e.target.value)}
         />
-        {formik.errors.age && <div>{formik.errors.age}</div>}
+        {errors.age && <div style={{ color: 'red' }}>{errors.age}</div>}
       </div>
       <div>
-        <label>Grade:</label>
+        <label>Email</label>
         <input
-          type="text"
-          name="grade"
-          onChange={formik.handleChange}
-          value={formik.values.grade}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
-        {formik.errors.grade && <div>{formik.errors.grade}</div>}
+        {errors.email && <div style={{ color: 'red' }}>{errors.email}</div>}
       </div>
       <button type="submit">Submit</button>
     </form>
